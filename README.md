@@ -1,2 +1,2 @@
 # QuizApp
-A python program to train your knowledge
+A python program to test your knowledge
