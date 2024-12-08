@@ -128,24 +128,30 @@ def play_quiz():
     errors_to_save = []
 
     for idx, question_data in enumerate(questions, 1):
-        print(f"\nQuestion {idx}/{len(questions)}: {question_data[0]}")
-        options = question_data[1:-1]
-        explanation = question_data[-1]
+        while True:
+            print(f"\nQuestion {idx}/{len(questions)}: {question_data[0]}")
+            options = question_data[1:-1]
+            explanation = question_data[-1]
 
-        for option_idx, option in enumerate(options, 1):
-            print(f"{option_idx}. {option[0]}")
+            for option_idx, option in enumerate(options, 1):
+                print(f"{option_idx}. {option[0]}")
 
-        try:
-            answer = int(input("Votre réponse : ")) - 1
-            if 0 <= answer < len(options) and options[answer][1]:
-                print("Bonne réponse !")
-                score += 1
-            else:
-                print("Mauvaise réponse.")
-                errors_to_save.append(question_data)
-                print("Explication :", explanation)
-        except ValueError:
-            print("Réponse invalide.")
+            try:
+                answer = int(input("Votre réponse : ")) - 1
+                if 0 <= answer < len(options):
+                    if options[answer][1]:
+                        print("Bonne réponse !")
+                    else:
+                        print(f"Mauvaise réponse. La bonne réponse était : {options[[i for i, o in enumerate(options) if o[1]][0]][0]}.")
+                        errors_to_save.append(question_data)
+                    print("Explication :", explanation)
+                    break
+                else:
+                    print("Choix invalide. Veuillez essayer à nouveau.")
+            except ValueError:
+                print("Entrée invalide. Veuillez entrer un numéro valide.")
+
+        score += 1 if options[answer][1] else 0
 
     save_quiz(new_error_file, errors_to_save)
     print(f"\nVotre score : {score}/{len(questions)}")
@@ -224,23 +230,27 @@ def view_errors():
 
     print("\nQuestions incorrectes :")
     for idx, question_data in enumerate(questions[:], 1):
-        print(f"\nQuestion {idx}/{len(questions)}: {question_data[0]}")
-        options = question_data[1:-1]
-        explanation = question_data[-1]
+        while True:
+            print(f"\nQuestion {idx}/{len(questions)}: {question_data[0]}")
+            options = question_data[1:-1]
+            explanation = question_data[-1]
 
-        for option_idx, option in enumerate(options, 1):
-            print(f"{option_idx}. {option[0]}")
+            for option_idx, option in enumerate(options, 1):
+                print(f"{option_idx}. {option[0]}")
 
-        try:
-            answer = int(input("Votre réponse : ")) - 1
-            if 0 <= answer < len(options) and options[answer][1]:
-                print("Bonne réponse !")
-                questions.remove(question_data)
-            else:
-                print("Mauvaise réponse.")
-                print("Explication :", explanation)
-        except ValueError:
-            print("Réponse invalide.")
+            try:
+                answer = int(input("Votre réponse : ")) - 1
+                if 0 <= answer < len(options):
+                    if options[answer][1]:
+                        print("Bonne réponse !")
+                    else:
+                        print(f"Mauvaise réponse. La bonne réponse était : {options[[i for i, o in enumerate(options) if o[1]][0]][0]}.")
+                    print("Explication :", explanation)
+                    break
+                else:
+                    print("Choix invalide. Veuillez essayer à nouveau.")
+            except ValueError:
+                print("Entrée invalide. Veuillez entrer un numéro valide.")
 
     save_quiz(selected_file, questions)
 
