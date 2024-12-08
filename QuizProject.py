@@ -138,21 +138,26 @@ def play_quiz():
                 print(f"{option_idx}. {option[0]}")
 
             try:
-                answer = int(input("Votre réponse : ")) - 1
-                if 0 <= answer < len(options):
-                    if options[answer][1]:
+                answers = input("Votre réponse (séparez les numéros par des virgules pour plusieurs réponses) : ")
+                selected_indices = [int(x.strip()) - 1 for x in answers.split(',') if x.strip().isdigit()]
+
+                if all(0 <= idx < len(options) for idx in selected_indices):
+                    correct_indices = [i for i, option in enumerate(options) if option[1]]
+
+                    if set(selected_indices) == set(correct_indices):
                         print("Bonne réponse !")
+                        score += 1
                     else:
-                        print(f"Mauvaise réponse. La bonne réponse était : {options[[i for i, o in enumerate(options) if o[1]][0]][0]}.")
+                        print("Mauvaise réponse. Les bonnes réponses étaient :")
+                        for idx in correct_indices:
+                            print(f"- {options[idx][0]}")
                         errors_to_save.append(question_data)
                     print("Explication :", explanation)
                     break
                 else:
-                    print("Choix invalide. Veuillez essayer à nouveau.")
+                    print("Une ou plusieurs réponses sont invalides. Veuillez essayer à nouveau.")
             except ValueError:
-                print("Entrée invalide. Veuillez entrer un numéro valide.")
-
-        score += 1 if options[answer][1] else 0
+                print("Entrée invalide. Veuillez entrer des numéros valides.")
 
     save_quiz(new_error_file, errors_to_save)
     print(f"\nVotre score : {score}/{len(questions)}")
@@ -240,18 +245,24 @@ def view_errors():
                 print(f"{option_idx}. {option[0]}")
 
             try:
-                answer = int(input("Votre réponse : ")) - 1
-                if 0 <= answer < len(options):
-                    if options[answer][1]:
+                answers = input("Votre réponse (séparez les numéros par des virgules pour plusieurs réponses) : ")
+                selected_indices = [int(x.strip()) - 1 for x in answers.split(',') if x.strip().isdigit()]
+
+                if all(0 <= idx < len(options) for idx in selected_indices):
+                    correct_indices = [i for i, option in enumerate(options) if option[1]]
+
+                    if set(selected_indices) == set(correct_indices):
                         print("Bonne réponse !")
                     else:
-                        print(f"Mauvaise réponse. La bonne réponse était : {options[[i for i, o in enumerate(options) if o[1]][0]][0]}.")
+                        print("Mauvaise réponse. Les bonnes réponses étaient :")
+                        for idx in correct_indices:
+                            print(f"- {options[idx][0]}")
                     print("Explication :", explanation)
                     break
                 else:
-                    print("Choix invalide. Veuillez essayer à nouveau.")
+                    print("Une ou plusieurs réponses sont invalides. Veuillez essayer à nouveau.")
             except ValueError:
-                print("Entrée invalide. Veuillez entrer un numéro valide.")
+                print("Entrée invalide. Veuillez entrer des numéros valides.")
 
     save_quiz(selected_file, questions)
 
