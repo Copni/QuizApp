@@ -71,8 +71,8 @@ def play_quiz():
 
     print("\nThèmes disponibles :")
     for idx, (theme, path) in enumerate(themes.items(), 1):
-        print(f"{idx}. {theme} : {path}")
-    print("0. Annuler")
+        print(f"{idx:<3} {theme:<30} {path}")
+    print("0.   Annuler")
 
     try:
         selected_theme_idx = int(input("Entrez le numéro du thème que vous voulez sélectionner : ")) - 1
@@ -91,11 +91,12 @@ def play_quiz():
         return
 
     print("Quizzes disponibles :")
+    print(f"{'#':<3} {'Nom du Quiz':<30} {'Nombre de Questions'}")
     for idx, quiz in enumerate(quizzes, 1):
         quiz_path = os.path.join(theme_path, quiz)
         questions = load_quiz(quiz_path)
-        print(f"{idx}. {quiz} - {len(questions)} questions")
-    print("0. Annuler")
+        print(f"{idx:<3} {quiz:<30} {len(questions)} questions")
+    print("0.   Annuler")
 
     selected_indices = input("Entrez les numéros des quiz (séparés par des virgules) : ")
     if selected_indices.strip() == "0":
