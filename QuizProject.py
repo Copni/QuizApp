@@ -53,6 +53,64 @@ def load_themes():
         print(f"❌ Erreur lors du chargement des thèmes : {e}")
     return themes
 
+def edit_category():
+    themes = load_themes()
+    if not themes:
+        print("❌ Aucun thème n'est disponible.")
+        return
+
+    print("\n📂 Catégories disponibles :")
+    for idx, (theme, path) in enumerate(themes.items(), 1):
+        print(f"{idx}. {theme} : {path}")
+
+    try:
+        selected_idx = int(input("🎯 Entrez le numéro de la catégorie à modifier : ")) - 1
+        if selected_idx < 0 or selected_idx >= len(themes):
+            print("❌ Sélection invalide.")
+            return
+
+        selected_theme = list(themes.items())[selected_idx]
+        new_name = input(f"📝 Entrez le nouveau nom pour '{selected_theme[0]}' : ").strip()
+        if not new_name:
+            print("❌ Nom invalide.")
+            return
+
+        themes[new_name] = themes.pop(selected_theme[0])
+        save_themes(themes)
+        print(f"✅ Catégorie renommée en '{new_name}' avec succès !")
+
+    except ValueError:
+        print("❌ Entrée invalide.")
+
+# Add a function to delete categories
+def delete_category():
+    themes = load_themes()
+    if not themes:
+        print("❌ Aucun thème n'est disponible.")
+        return
+
+    print("\n📂 Catégories disponibles :")
+    for idx, (theme, path) in enumerate(themes.items(), 1):
+        print(f"{idx}. {theme} : {path}")
+
+    try:
+        selected_idx = int(input("🎯 Entrez le numéro de la catégorie à supprimer : ")) - 1
+        if selected_idx < 0 or selected_idx >= len(themes):
+            print("❌ Sélection invalide.")
+            return
+
+        selected_theme = list(themes.items())[selected_idx]
+        confirm = input(f"⚠️ Êtes-vous sûr de vouloir supprimer '{selected_theme[0]}' ? (oui/non) : ").strip().lower()
+        if confirm == 'oui':
+            themes.pop(selected_theme[0])
+            save_themes(themes)
+            print(f"✅ Catégorie '{selected_theme[0]}' supprimée avec succès !")
+        else:
+            print("❌ Suppression annulée.")
+
+    except ValueError:
+        print("❌ Entrée invalide.")
+
 # Display formatted explanation
 def display_explanation(explanation):
     print("\n📖 Explication :")
@@ -112,6 +170,24 @@ def handle_matching_question(question_data, score, errors_to_save):
             print("⚠️ Format invalide. Réessayez en utilisant le format spécifié.")
 
     return score
+
+
+def randomize_mcq_answers(question_data):
+    """
+    Randomizes the answers in MCQ questions while maintaining the correctness information.
+    :param question_data: The question data list with question text, options, and explanation.
+    :return: The updated question data with randomized options.
+    """
+    question_text = question_data[0]
+    options = question_data[1:-1]
+    explanation = question_data[-1]
+
+    # Shuffle options while preserving their correctness
+    randomized_options = options[:]
+    random.shuffle(randomized_options)
+
+    # Update the question data with shuffled options
+    return [question_text, *randomized_options, explanation]
 
 
 def play_quiz():
@@ -192,6 +268,9 @@ def play_quiz():
         if isinstance(question_data[-1], dict):
             score = handle_matching_question(question_data, score, errors_to_save)
         else:
+            # Randomize MCQ answers
+            question_data = randomize_mcq_answers(question_data)
+
             # Process standard MCQ
             options = question_data[1:-1]
             explanation = question_data[-1]
@@ -213,7 +292,8 @@ def play_quiz():
 
             # Notify user about multiple answers
             if len(correct_answers) > 1:
-                print(f"ℹ️ Cette question a {len(correct_answers)} réponses correctes. Entrez vos réponses séparées par des virgules.")
+                print(
+                    f"ℹ️ Cette question a {len(correct_answers)} réponses correctes. Entrez vos réponses séparées par des virgules.")
 
             while True:  # Loop until the user provides the correct number of answers
                 try:
@@ -240,7 +320,7 @@ def play_quiz():
                 except ValueError:
                     print("❌ Réponse invalide. Veuillez réessayer.")
 
-    # Save incorrect questions
+        # Save incorrect questions
     if errors_to_save:
         new_error_file = os.path.join(error_theme_path, f"MyError_{len(errors_to_save)}.json")
         save_quiz(new_error_file, errors_to_save)
@@ -369,7 +449,9 @@ def main():
         print("2. 📂 Charger un quiz")
         print("3. ✍️ Créer un quiz")
         print("4. 🚫 Voir mes erreurs")
-        print("5. 🚪 Quitter")
+        print("5. ✏️ Modifier une catégorie")
+        print("6. 🗑️ Supprimer une catégorie")
+        print("7. 🚪 Quitter")
 
         choice = input("🎯 Entrez votre choix : ").strip()
 
@@ -382,10 +464,15 @@ def main():
         elif choice == '4':
             view_errors()
         elif choice == '5':
+            edit_category()
+        elif choice == '6':
+            delete_category()
+        elif choice == '7':
             print("👋 Au revoir !")
             break
         else:
             print("❌ Choix invalide.")
+
 
 if __name__ == "__main__":
     main()
