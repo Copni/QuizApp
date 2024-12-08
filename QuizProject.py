@@ -60,24 +60,32 @@ def display_explanation(explanation):
 
 
 def handle_matching_question(question_data, score, errors_to_save):
-    """Handles matching-type questions."""
+    """Handles matching-type questions with any number of categories and options."""
     print(textwrap.fill(question_data[0], width=100))
 
-    # Display categories (A, B, C, D)
-    print("\n📂 Categories:")
-    for element in question_data[1:5]:  # Categories are in a fixed range
-        print(f"   {element[0]}")
+    # Separate categories and options dynamically
+    categories = []
+    options = []
+    for element in question_data[1:-2]:  # Skip the description and answer dictionary
+        if element[0][0].isalpha():  # Categories start with letters (A, B, etc.)
+            categories.append(element[0])
+        else:  # Options start with numbers (1, 2, etc.)
+            options.append(element[0])
 
-    # Display options (1, 2, 3, 4)
+    # Display categories
+    print("\n📂 Categories:")
+    for category in categories:
+        print(f"   {category}")
+
+    # Display options
     print("\n📜 Options:")
-    for element in question_data[5:9]:  # Options are in a fixed range
-        print(f"   {element[0]}")
+    for option in options:
+        print(f"   {option}")
 
     # Prompt user for their answer in the specified format
     print("\n👉 Associez chaque catégorie à un numéro en utilisant le format : 'A=1,B=2,...'")
     correct_answer = question_data[-1]  # The correct answer from the JSON
-    reversed_correct_answer = {v: str(k) for k, v in
-                               correct_answer.items()}  # Reverse mapping for user input comparison
+    reversed_correct_answer = {v: str(k) for k, v in correct_answer.items()}  # Reverse mapping for user input comparison
 
     while True:
         user_input = input("💡 Votre réponse : ").strip()
