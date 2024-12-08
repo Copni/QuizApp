@@ -58,7 +58,54 @@ def display_explanation(explanation):
     print("\n📖 Explication :")
     print(textwrap.fill(explanation, width=100))  # Wider wrapping for better readability
 
-# Play a quiz
+
+def handle_matching_question(question_data, score, errors_to_save):
+    """Handles matching-type questions."""
+    print(textwrap.fill(question_data[0], width=100))
+
+    # Display categories (A, B, C, D)
+    print("\n📂 Categories:")
+    for element in question_data[1:5]:  # Categories are in a fixed range
+        print(f"   {element[0]}")
+
+    # Display options (1, 2, 3, 4)
+    print("\n📜 Options:")
+    for element in question_data[5:9]:  # Options are in a fixed range
+        print(f"   {element[0]}")
+
+    # Prompt user for their answer in the specified format
+    print("\n👉 Associez chaque catégorie à un numéro en utilisant le format : 'A=1,B=2,...'")
+    correct_answer = question_data[-1]  # The correct answer from the JSON
+    reversed_correct_answer = {v: str(k) for k, v in
+                               correct_answer.items()}  # Reverse mapping for user input comparison
+
+    while True:
+        user_input = input("💡 Votre réponse : ").strip()
+        try:
+            # Parse the user input into a dictionary
+            user_answer = {pair.split('=')[0].strip(): pair.split('=')[1].strip() for pair in user_input.split(',')}
+
+            # Check if the user's answer matches the reversed correct answer
+            if user_answer == reversed_correct_answer:
+                print("✅ Bonne réponse !")
+                score += 1
+                print("\n✔️ Réponse correcte :")
+                for key, value in reversed_correct_answer.items():
+                    print(f"   {key} = {value}")
+                break
+            else:
+                print("❌ Mauvaise réponse.")
+                print("\n✔️ Réponse correcte :")
+                for key, value in reversed_correct_answer.items():
+                    print(f"   {key} = {value}")
+                errors_to_save.append(question_data)
+                break
+        except Exception:
+            print("⚠️ Format invalide. Réessayez en utilisant le format spécifié.")
+
+    return score
+
+
 def play_quiz():
     themes = load_themes()
 
@@ -130,17 +177,29 @@ def play_quiz():
     errors_to_save = []
 
     for idx, question_data in enumerate(questions, 1):
-        while True:
-            print("\n" + "=" * 100)
-            print(f"❓ Question {idx}/{len(questions)}:")
-            print(textwrap.fill(question_data[0], width=100))  # Wider wrapping for questions
-            print()  # Blank line between question and first answer
+        print("\n" + "=" * 100)
+        print(f"❓ Question {idx}/{len(questions)}:")
+
+        # Check if the question is of Match type
+        if isinstance(question_data[-1], dict):
+            score = handle_matching_question(question_data, score, errors_to_save)
+        else:
+            # Process standard MCQ
             options = question_data[1:-1]
             explanation = question_data[-1]
 
+            # Properly format and display the question with controlled line breaks
+            question_text = question_data[0]
+            formatted_question = "\n".join(
+                textwrap.fill(paragraph, width=100) for paragraph in question_text.split('\n')
+            )
+            print(formatted_question)
+            print()  # Blank line between the question and the answers
+
             for option_idx, option in enumerate(options, 1):
                 print(f"   {option_idx}. {option[0]}")
-            print()  # Blank line between the last answer and the user input prompt
+
+            print()  # Blank line between the last answer and the user input
 
             correct_answers = [i + 1 for i, opt in enumerate(options) if opt[1]]
 
@@ -148,29 +207,30 @@ def play_quiz():
             if len(correct_answers) > 1:
                 print(f"ℹ️ Cette question a {len(correct_answers)} réponses correctes. Entrez vos réponses séparées par des virgules.")
 
-            try:
-                user_answers = input("👉 Votre réponse : ").strip()
-                user_answers = [int(ans.strip()) for ans in user_answers.split(',')]
+            while True:  # Loop until the user provides the correct number of answers
+                try:
+                    user_answers = input("👉 Votre réponse : ").strip()
+                    user_answers = [int(ans.strip()) for ans in user_answers.split(',')]
 
-                # Check for invalid number of answers
-                if len(user_answers) != len(correct_answers):
-                    print(f"⚠️ Vous devez entrer exactement {len(correct_answers)} réponses. Réessayez.")
-                    continue  # Prompt the user again
+                    # Check for the correct number of answers
+                    if len(user_answers) != len(correct_answers):
+                        print(f"⚠️ Vous devez entrer exactement {len(correct_answers)} réponses. Réessayez.")
+                        continue  # Loop back for user input
 
-                # Check if answers are correct
-                if set(user_answers) == set(correct_answers):
-                    print("✅ Bonne réponse !")
-                    display_explanation(explanation)
-                    score += 1
-                    break
-                else:
-                    print("❌ Mauvaise réponse.")
-                    print(f"✔️ La bonne réponse était : {', '.join(map(str, correct_answers))}")
-                    display_explanation(explanation)
-                    errors_to_save.append(question_data)
-                    break
-            except ValueError:
-                print("❌ Réponse invalide. Veuillez réessayer.")
+                    # Check if answers are correct
+                    if set(user_answers) == set(correct_answers):
+                        print("✅ Bonne réponse !")
+                        display_explanation(explanation)
+                        score += 1
+                        break
+                    else:
+                        print("❌ Mauvaise réponse.")
+                        print(f"✔️ La bonne réponse était : {', '.join(map(str, correct_answers))}")
+                        display_explanation(explanation)
+                        errors_to_save.append(question_data)
+                        break
+                except ValueError:
+                    print("❌ Réponse invalide. Veuillez réessayer.")
 
     # Save incorrect questions
     if errors_to_save:
@@ -180,6 +240,7 @@ def play_quiz():
     print("\n🎉 Résultat final :")
     print(f"   📊 Votre score : {score}/{len(questions)}")
     print("=" * 100)
+
 
 # Load quiz paths and themes
 def load_quiz_paths():
