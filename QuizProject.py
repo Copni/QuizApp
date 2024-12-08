@@ -92,7 +92,9 @@ def play_quiz():
 
     print("Quizzes disponibles :")
     for idx, quiz in enumerate(quizzes, 1):
-        print(f"{idx}. {quiz}")
+        quiz_path = os.path.join(theme_path, quiz)
+        questions = load_quiz(quiz_path)
+        print(f"{idx}. {quiz} - {len(questions)} questions")
     print("0. Annuler")
 
     selected_indices = input("Entrez les numéros des quiz (séparés par des virgules) : ")
@@ -125,13 +127,13 @@ def play_quiz():
     new_error_file = os.path.join(error_theme_path, f"MyError{len(error_files) + 1:02d}.json")
     errors_to_save = []
 
-    for question_data in questions:
-        print("\nQuestion :", question_data[0])
+    for idx, question_data in enumerate(questions, 1):
+        print(f"\nQuestion {idx}/{len(questions)}: {question_data[0]}")
         options = question_data[1:-1]
         explanation = question_data[-1]
 
-        for idx, option in enumerate(options, 1):
-            print(f"{idx}. {option[0]}")
+        for option_idx, option in enumerate(options, 1):
+            print(f"{option_idx}. {option[0]}")
 
         try:
             answer = int(input("Votre réponse : ")) - 1
@@ -221,13 +223,13 @@ def view_errors():
         return
 
     print("\nQuestions incorrectes :")
-    for question_data in questions[:]:
-        print("\nQuestion :", question_data[0])
+    for idx, question_data in enumerate(questions[:], 1):
+        print(f"\nQuestion {idx}/{len(questions)}: {question_data[0]}")
         options = question_data[1:-1]
         explanation = question_data[-1]
 
-        for idx, option in enumerate(options, 1):
-            print(f"{idx}. {option[0]}")
+        for option_idx, option in enumerate(options, 1):
+            print(f"{option_idx}. {option[0]}")
 
         try:
             answer = int(input("Votre réponse : ")) - 1
