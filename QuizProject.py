@@ -118,51 +118,64 @@ def display_explanation(explanation):
 
 
 def handle_matching_question(question_data, score, errors_to_save):
-    """Handles matching-type questions with any number of categories and options."""
-    print(textwrap.fill(question_data[0], width=100))
+    """
+    Handles matching-type questions with options shuffled and categories remaining in order.
+    """
+    question_text = question_data[0]
+    categories = [item[0][3:] for item in question_data[1:] if isinstance(item, list) and item[0][0].isalpha()]
+    options = [item[0][3:] for item in question_data[1:] if isinstance(item, list) and item[0][0].isdigit()]
+    explanation = question_data[-2]
+    original_mapping = question_data[-1]
 
-    # Separate categories and options dynamically
-    categories = []
-    options = []
-    for element in question_data[1:-2]:  # Skip the description and answer dictionary
-        if element[0][0].isalpha():  # Categories start with letters (A, B, etc.)
-            categories.append(element[0])
-        else:  # Options start with numbers (1, 2, etc.)
-            options.append(element[0])
+    # Extract the text corresponding to each key in original_mapping
+    original_option_texts = {key: next(opt[0][3:] for opt in question_data[1:] if opt[0].startswith(key)) for key in original_mapping.keys()}
+
+    # Shuffle options
+    shuffled_options = options[:]
+    random.shuffle(shuffled_options)
+
+    # Create shuffled mapping based on shuffled options
+    shuffled_mapping = {
+        category: str(shuffled_options.index(original_option_texts[key]) + 1)
+        for key, category in original_mapping.items()
+    }
+
+    # Display the question
+    print(textwrap.fill(question_text, width=100))
 
     # Display categories
     print("\n📂 Categories:")
-    for category in categories:
-        print(f"   {category}")
+    for idx, category in enumerate(categories, start=1):
+        print(f"   {chr(64 + idx)}. {category}")
 
-    # Display options
+    # Display shuffled options
     print("\n📜 Options:")
-    for option in options:
-        print(f"   {option}")
+    for idx, option in enumerate(shuffled_options, start=1):
+        print(f"   {idx}. {option}")
 
-    # Prompt user for their answer in the specified format
+    # Prompt the user for their answer
     print("\n👉 Associez chaque catégorie à un numéro en utilisant le format : 'A=1,B=2,...'")
-    correct_answer = question_data[-1]  # The correct answer from the JSON
-    reversed_correct_answer = {v: str(k) for k, v in correct_answer.items()}  # Reverse mapping for user input comparison
-
     while True:
         user_input = input("💡 Votre réponse : ").strip()
         try:
-            # Parse the user input into a dictionary
-            user_answer = {pair.split('=')[0].strip(): pair.split('=')[1].strip() for pair in user_input.split(',')}
+            # Parse the user's input into a dictionary
+            user_answer = {
+                pair.split('=')[0].strip(): pair.split('=')[1].strip()
+                for pair in user_input.split(',')
+            }
 
-            # Check if the user's answer matches the reversed correct answer
-            if user_answer == reversed_correct_answer:
+            # Check if the user's answer matches the shuffled mapping
+            if user_answer == shuffled_mapping:
                 print("✅ Bonne réponse !")
                 score += 1
                 print("\n✔️ Réponse correcte :")
-                for key, value in reversed_correct_answer.items():
+                for key, value in shuffled_mapping.items():
                     print(f"   {key} = {value}")
                 break
             else:
                 print("❌ Mauvaise réponse.")
                 print("\n✔️ Réponse correcte :")
-                for key, value in reversed_correct_answer.items():
+                for key, value in shuffled_mapping.items():
                     print(f"   {key} = {value}")
                 errors_to_save.append(question_data)
                 break
@@ -243,7 +256,8 @@ def play_quiz():
         return
 
     try:
-        selected_files = [quizzes[int(i) - 1] for i in selected_indices.split(',') if i.isdigit() and 0 < int(i) <= len(quizzes)]
+        selected_files = [quizzes[int(i) - 1] for i in selected_indices.split(',') if
+                          i.isdigit() and 0 < int(i) <= len(quizzes)]
     except IndexError:
         print("❌ Sélection invalide.")
         return
@@ -320,7 +334,7 @@ def play_quiz():
                 except ValueError:
                     print("❌ Réponse invalide. Veuillez réessayer.")
 
-        # Save incorrect questions
+    # Save incorrect questions
     if errors_to_save:
         new_error_file = os.path.join(error_theme_path, f"MyError_{len(errors_to_save)}.json")
         save_quiz(new_error_file, errors_to_save)
